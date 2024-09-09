@@ -1,0 +1,15 @@
+httpx==0.24.0
+Pillow==10.2.0
+playwright==1.42.0
+tenacity==8.2.2
+opencv-python
+aiomysql==0.2.0
+pydantic==2.5.2
+aiofiles~=23.2.1
+python-dotenv==1.0.1
+wordcloud==1.9.3
+matplotlib==3.9.0
+requests==2.32.3
+parsel==1.9.1
+mysql-connector-python~=8.4.0
+SQLAlchemy~=2.0.30
