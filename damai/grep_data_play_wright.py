@@ -1,8 +1,10 @@
 import json
 import logging
+
 from playwright.sync_api import sync_playwright, TimeoutError
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 def fetch_damai_forum(playwright):
     browser = playwright.chromium.launch(headless=False)
@@ -55,12 +57,14 @@ def fetch_damai_forum(playwright):
                             artist = artist_element.inner_text() if artist_element else 'N/A'
 
                             location_element = item.query_selector('.items__txt__venue__icon')
-                            location = location_element.evaluate('node => node.nextSibling.textContent.trim()') if location_element else 'N/A'
+                            location = location_element.evaluate(
+                                'node => node.nextSibling.textContent.trim()') if location_element else 'N/A'
                             location = location.split('|')[-1].strip()  # 去掉前缀
 
                             # 获取日期
                             date_element = item.query_selector('.items__txt__time__icon')
-                            date = date_element.evaluate('node => node.nextSibling.textContent.trim()') if date_element else 'N/A'
+                            date = date_element.evaluate(
+                                'node => node.nextSibling.textContent.trim()') if date_element else 'N/A'
 
                             # 获取价格
                             price_element = item.query_selector('.items__txt__price span')
@@ -123,12 +127,36 @@ def fetch_damai_forum(playwright):
                         print(f"An error occurred: {e}")
                         break
     print(f"all event count {len(data_list)} page count {page_count}")
+
+    for data in data_list:
+        detail_url = data['detail_url']
+        page.goto(detail_url)
+        page.wait_for_load_state('networkidle')
+
+        # 获取经纬度信息
+        map_element = page.query_selector('a[data-spm="daddress"]')
+        if map_element:
+            map_href = map_element.get_attribute('href')
+            lng_lat = map_href.split('lng=')[1].split('&lat=')
+            data['longitude'] = lng_lat[0]
+            data['latitude'] = lng_lat[1].split('&')[0]
+        else:
+            data['longitude'] = 'N/A'
+            data['latitude'] = 'N/A'
+
+        # 获取详情描述信息
+        detail_description_element = page.query_selector('#detail .words')
+        data['detail_description'] = detail_description_element.inner_html() if detail_description_element else 'N/A'
+        print(f"detail：{data['detail_description']} lat,lng {data['longitude']} {data['latitude']}")
+    print("finish crawler")
     browser.close()
     return data_list
+
 
 def save_data_to_json(data_list, filename='damai.json'):
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(data_list, f, ensure_ascii=False, indent=4)
+
 
 if __name__ == '__main__':
     with sync_playwright() as playwright:
