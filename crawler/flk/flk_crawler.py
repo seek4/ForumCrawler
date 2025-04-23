@@ -9,7 +9,7 @@ target_cities = ["北京", "深圳", "成都", "上海", "合肥", "武汉", "�
 
 
 def crawler_city_traffic_rules(city_name: str):
-    with sync_playwright() as playwright:
+    with (sync_playwright() as playwright):
         browser = playwright.chromium.launch(headless=False)
         page = browser.new_page()
         page.goto("https://flk.npc.gov.cn/")
@@ -59,8 +59,9 @@ def crawler_city_traffic_rules(city_name: str):
         print(f"Found {len(results)} results")
         filter_results = []
         for result in results:
+            result['city'] = city_name
             status = result['status']
-            if status == '有效' and city_name in result['title'] and '海上' not in result['title']:
+            if status == '有效' and city_name in result['title'] and '海上' not in result['title'] and '轨道' not in result['title'] and '水上' not in result['title']:
                 filter_results.append(result)
         print(f"city{city_name} Found {len(filter_results)} results after filter")
 
@@ -73,7 +74,7 @@ if __name__ == "__main__":
     for city in target_cities:
         city_results = crawler_city_traffic_rules(city)
         if len(city_results) > 0:
-            all_results.append(city_results)
+            all_results.extend(city_results)
         else:
             print(f"No results found for city {city}")
     print(f"all_results size: {len(all_results)}")
